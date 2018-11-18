@@ -24,30 +24,34 @@ import static com.car.game.Constants.PPM;
 
 public class PlayScreen implements Screen {
 
-    //SpriteBatch is used for
-    //effective drawing of multiple sprites
     private final SpriteBatch mBatch;
+    //SpriteBatch is used for effective drawing of multiple sprites
 
     private final World mWorld;
     private final Box2DDebugRenderer mB2dr;
 
-    //Orthographic == 2d
     private final OrthographicCamera mCamera;
+    //Orthographic - size of the object does not change according to the distance to the camera
 
-    //It is where camera is placed
-    private  final Viewport mViewport;
+    private final Viewport mViewport;
+    //Viewport is where camera is placed
 
     private final Body mPlayer;
+
+
 
     public PlayScreen() {
         mBatch = new SpriteBatch();
         mWorld = new World(GRAVITY, true);//sleep is used to prevent redundant calculations
         mB2dr = new Box2DDebugRenderer();
         mCamera = new OrthographicCamera();
-        mCamera.zoom= DEFAULT_ZOOM;
-        mViewport= new FitViewport(640/PPM,480/PPM,mCamera);
-        mPlayer= ShapeFactory.createRectangle(new Vector2(0,0),new Vector2(64,128),
-                                              BodyDef.BodyType.DynamicBody, mWorld, 0.4f);
+        mCamera.zoom = DEFAULT_ZOOM;
+        mViewport = new FitViewport(640 / PPM, 480 / PPM, mCamera);
+        mPlayer = ShapeFactory.createRectangle(new Vector2(0, 0),
+                                               new Vector2(64, 128),
+                                               BodyDef.BodyType.DynamicBody,
+                                               mWorld,
+                                        0.4f);
     }
 
     @Override
@@ -57,7 +61,7 @@ public class PlayScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0,0,0,1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         update(delta);
@@ -65,16 +69,24 @@ public class PlayScreen implements Screen {
     }
 
     private void draw() {
+        mBatch.setProjectionMatrix(mCamera.combined);
+        //mCamera.combined -  matrix that describes where things from game world should be
+        //                    rendered on the screen
+        //setProjectionMatrix instructs the batch to use that combined matrix
 
+        mB2dr.render(mWorld, mCamera.combined);
     }
 
     private void update(final float delta) {
+        mCamera.position.set(mPlayer.getPosition(), 0);
+        mCamera.update();
 
+        mWorld.step(delta, 6, 2);//because it works better with 6,2
     }
 
     @Override
     public void resize(int width, int height) {
-
+        mViewport.update(width, height);
     }
 
     @Override
