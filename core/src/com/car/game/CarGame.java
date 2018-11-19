@@ -8,17 +8,23 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.car.game.screens.PlayScreen;
 
-public class CarGame extends Game {
-	@Override
-	public void create () {
-		setScreen(new PlayScreen());
-	}
+public class CarGame extends Game
+{
+    @Override
+    public void create()
+    {
+        setScreen(new PlayScreen());
+    }
 
-	@Override
-	public void render () {
-		super.render();
-	}
-	
-	@Override
-	public void dispose () {super.dispose();}
+    @Override
+    public void render()
+    {
+        super.render();
+    }
+
+    @Override
+    public void dispose()
+    {
+        super.dispose();
+    }
 }

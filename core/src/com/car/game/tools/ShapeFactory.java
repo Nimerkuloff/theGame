@@ -15,19 +15,17 @@ import static com.car.game.Constants.PPM;
 
 public class ShapeFactory {
 
-    private ShapeFactory() {
-    }
+    private ShapeFactory() {}
 
     public static Body createRectangle(final Vector2 position, final Vector2 size,
                                        final BodyDef.BodyType type, final World world,
-                                       final float density) {
-
+                                        float density)
+    {
         //define properties of a body
         final BodyDef bdef = new BodyDef();
-        final Body body = world.createBody(bdef);
-
         bdef.position.set(position.x / PPM, position.y / PPM);
         bdef.type = type;
+        final Body body = world.createBody(bdef);
 
         //define fixture
         final PolygonShape shape = new PolygonShape();
