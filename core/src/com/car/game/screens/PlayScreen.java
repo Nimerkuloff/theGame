@@ -29,8 +29,13 @@ public class PlayScreen implements Screen
     public static final int DRIVE_DIRECTION_BACKWARD = 2;
     public static final int TURN_DIRECTION_NONE = 0;
     public static final int TURN_DIRECTION_LEFT = 1;
-
     public static final int TURN_DIRECTION_RIGHT = 2;
+
+    public static final float DRIFT = 0;
+    public static final float TURN_SPEED = 2.0f;
+    public static final float DRIVE_SPEED = 120.0f;
+    public static final float MAX_SPEED = 35.0f;
+
     private final SpriteBatch mBatch;
     //SpriteBatch is used for effective drawing of multiple sprites
     private final World mWorld;
@@ -41,7 +46,9 @@ public class PlayScreen implements Screen
     //Viewport is where camera is placed
     private final Body mPlayer;
     private final MapLoader mMapLoader;
+
     private Controller mController;
+
     private int mDriveDirection = DRIVE_DIRECTION_NONE;
     private int mTurnDirection = TURN_DIRECTION_NONE;
 
@@ -80,7 +87,15 @@ public class PlayScreen implements Screen
         processInput();
 
         update(delta);
+        handleDrift();
         draw();
+    }
+
+    private void handleDrift()
+    {
+        Vector2 forwardSpeed = getForwardVelocity();
+        Vector2 lateralSpeed = getLateralVelocity();
+        mPlayer.setLinearVelocity(forwardSpeed.x + lateralSpeed.x + DRIFT, forwardSpeed.y + lateralSpeed.y + DRIFT);
     }
 
     private void processInput()
@@ -88,25 +103,44 @@ public class PlayScreen implements Screen
         Vector2 baseVector = new Vector2();
 
         if (mTurnDirection == TURN_DIRECTION_RIGHT) {
-            mPlayer.setAngularVelocity(-2.0f);
+            mPlayer.setAngularVelocity(-TURN_SPEED);
         } else if (mTurnDirection == TURN_DIRECTION_LEFT) {
-            mPlayer.setAngularVelocity(2.0f);
+            mPlayer.setAngularVelocity(TURN_SPEED);
         } else if (mTurnDirection == TURN_DIRECTION_NONE && mPlayer.getAngularVelocity() != 0) {
             mPlayer.setAngularVelocity(0.0f);
         }
 
         if (mDriveDirection == DRIVE_DIRECTION_FORWARD) {
-            baseVector.set(0, 120.0f);
+            baseVector.set(0, DRIVE_SPEED);
         } else if (mDriveDirection == DRIVE_DIRECTION_BACKWARD) {
-            baseVector.set(0, -120.0f);
+            baseVector.set(0, -DRIVE_SPEED);
         }
 
-        if (!baseVector.isZero()) {
+        if (!baseVector.isZero() && mPlayer.getLinearVelocity().len() < MAX_SPEED) {
             mPlayer.applyForceToCenter(mPlayer.getWorldVector(baseVector), true);
         }
     }
 
+    private Vector2 getForwardVelocity()
+    //пригодится для актуализации вектора скорости на поворотах
+    {
+        Vector2 currentNormal = mPlayer.getWorldVector(new Vector2(0, 1));
+        float dotProduct = currentNormal.dot(mPlayer.getLinearVelocity());
+        //dotProduct -- скалярное произведение
+        return multiply(dotProduct, currentNormal);
+    }
 
+    private Vector2 getLateralVelocity()
+    {
+        Vector2 currentNormal = mPlayer.getWorldVector(new Vector2(1, 0));
+        float dotProduct = currentNormal.dot(mPlayer.getLinearVelocity());
+        return multiply(dotProduct, currentNormal);
+    }
+
+    private Vector2 multiply(float a, Vector2 v)
+    {
+        return new Vector2(a * v.x, a * v.y);
+    }
 
     private void handleInput()
     {
