@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -25,11 +24,9 @@ public class Menu implements Screen
     private SpriteBatch mBatch;
     private Viewport mViewport;
     private OrthographicCamera mCamera;
-    private Skin mSkin;
 
 
     private TextButton.TextButtonStyle textButtonStyle;
-    private BitmapFont font;
 
 
     public Menu()
@@ -94,8 +91,6 @@ public class Menu implements Screen
         //Add buttons to table
         mainTable.add(playButton);
         mainTable.row();
-        mainTable.add(optionsButton);
-        mainTable.row();
         mainTable.add(exitButton);
 
         //Add table to stage
@@ -141,6 +136,6 @@ public class Menu implements Screen
     @Override
     public void dispose()
     {
-        mSkin.dispose();
+
     }
 }
