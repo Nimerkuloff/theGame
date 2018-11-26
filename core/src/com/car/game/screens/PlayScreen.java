@@ -5,7 +5,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -23,6 +22,9 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.car.game.tools.MapLoader;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.badlogic.gdx.Gdx.app;
 import static com.car.game.Constants.DEFAULT_AXIS_SENS;
@@ -58,15 +60,19 @@ public class PlayScreen implements Screen
     //Viewport is where camera is placed
     private final Body mPlayer;
     private final MapLoader mMapLoader;
-    public double mScore = 100;
-    private Controller mController;
+
+    public double mScore = 55;
+    public double milestone = 50;
+    public int tauntIndex = 0;
+
     private int mDriveDirection = DRIVE_DIRECTION_NONE;
     private int mTurnDirection = TURN_DIRECTION_NONE;
     private String mStringScore;
-    private String mTaunt;
+    private String mTaunt = "Not yet";
     private BitmapFont font;
-    private int anotherTauntPos = 0;
-    private int tauntInterval = 15;
+
+
+    private Controller mController;
 
     public PlayScreen()
     {
@@ -81,6 +87,7 @@ public class PlayScreen implements Screen
         mController = null;
 
         font = new BitmapFont();
+
         font.setColor(0.5f, 0.4f, 0, 1);
 
         try {
@@ -114,39 +121,58 @@ public class PlayScreen implements Screen
 
         update(delta);
         handleDrift();
+
+
         mBatch.begin();
+
         font.setColor(0.5f, 0.4f, 0, 1);
 
-        font.draw(mBatch, "Score: " + mStringScore, 3 / PPM, 10 / PPM);
+        font.draw(mBatch, "Score: " + mStringScore, 640 / PPM, 480 / PPM);
+        font.draw(mBatch, mTaunt, 300 / PPM, -10);
+
         mBatch.end();
+
+
         draw();
     }
 
     private void processDamage()
 
     {
-
         int numContacts = mWorld.getContactCount();
 
         if (numContacts > 0) {
-
 
             double randomHit = MIN_HIT + (Math.random() * (MAX_HIT - MIN_HIT));
             mStringScore = String.valueOf(mScore -= randomHit);
             Gdx.app.log("SCOOOORE", mStringScore);
         }
-        if (mScore < 150) {
 
-            FileHandle handle = Gdx.files.local("taunts.txt");
-            for (int i = 0; i < anotherTauntPos; i++) {
-                handle.readString();
+        if (-mScore > milestone) {
+            List<String> taunts = createListOfTaunts();
 
-                mTaunt = handle.readString();
-                anotherTauntPos++;
-            }
+            mTaunt = taunts.get(tauntIndex);
+            tauntIndex++;
+            milestone += 50;
         }
 
 
+    }
+
+    private List<String> createListOfTaunts()
+    {
+        List<String> taunts = new ArrayList<String>();
+        taunts.add("Driving, heh?");
+        taunts.add("Try to stay positive");
+        taunts.add("\"Go on, prove me wrong. Destroy the fabric of the universe. See if I care. \" ― Terry Pratchett)");
+        taunts.add("\" I often wonder, in a catfight, when one doesn't want to fight, if the other cat calls it a pussy.\"― Anthony Liccione");
+        taunts.add("\"Is that all you've got? A few tricks and quick feet? That's no way to enforce your bold tongue!\" ― T. A. Miles, Six Celestial Swords");
+        taunts.add("\"One day, in retrospect, the years of struggle will strike you as the most beautiful.\" ― Sigmund Freud");
+        taunts.add("\"What you stay focused on will grow.\" ― Roy T. Bennett");
+        taunts.add("NO, NO, NO stop!!! There aren't any endings.");
+        taunts.add("\"You can get a thousand no's from people, and only one \"yes\" from God.\" ― Tyler Perry");
+
+        return taunts;
     }
 
     private void createCollisionListener()
@@ -281,8 +307,9 @@ public class PlayScreen implements Screen
     private void draw()
     {
         mBatch.begin();
-        font.draw(mBatch, "Score: " + mStringScore, 3 / PPM, 10 / PPM);
+        font.draw(mBatch, "Score: " + mStringScore, 3 / PPM, 100 / PPM);
         mBatch.end();
+
         mBatch.setProjectionMatrix(mCamera.combined);
         //mCamera.combined -  matrix that describes where things from game world should be
         //                    rendered on the screen

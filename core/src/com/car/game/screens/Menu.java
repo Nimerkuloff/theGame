@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import static com.car.game.Constants.MAP_NAME;
 import static com.car.game.Constants.PPM;
 
 public class Menu implements Screen
@@ -67,7 +68,7 @@ public class Menu implements Screen
 
         //Create buttons
         TextButton playButton = new TextButton("Play", textButtonStyle);
-        TextButton optionsButton = new TextButton("Options", textButtonStyle);
+        TextButton anotherMapButton = new TextButton("Another map", textButtonStyle);
         TextButton exitButton = new TextButton("Exit", textButtonStyle);
 
         //Add listeners to buttons
@@ -76,6 +77,16 @@ public class Menu implements Screen
             @Override
             public void clicked(InputEvent event, float x, float y)
             {
+                ((Game) Gdx.app.getApplicationListener()).setScreen(new PlayScreen());
+            }
+        });
+
+        anotherMapButton.addListener(new ClickListener()
+        {
+            @Override
+            public void clicked(InputEvent event, float x, float y)
+            {
+                MAP_NAME = "another_map.tmx";
                 ((Game) Gdx.app.getApplicationListener()).setScreen(new PlayScreen());
             }
         });
@@ -90,6 +101,8 @@ public class Menu implements Screen
 
         //Add buttons to table
         mainTable.add(playButton);
+        mainTable.row();
+        mainTable.add(anotherMapButton);
         mainTable.row();
         mainTable.add(exitButton);
 
