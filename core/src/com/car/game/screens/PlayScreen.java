@@ -29,7 +29,6 @@ import java.util.List;
 import static com.badlogic.gdx.Gdx.app;
 import static com.car.game.Constants.DEFAULT_AXIS_SENS;
 import static com.car.game.Constants.DEFAULT_ZOOM;
-import static com.car.game.Constants.DRIFT;
 import static com.car.game.Constants.DRIVE_DIRECTION_BACKWARD;
 import static com.car.game.Constants.DRIVE_DIRECTION_FORWARD;
 import static com.car.game.Constants.DRIVE_DIRECTION_NONE;
@@ -48,9 +47,12 @@ import static com.car.game.Constants.TURN_SPEED;
 public class PlayScreen implements Screen
 {
 
-
+    public static final float FONT_SCALE = 0.9f;
+    public static final int TAUNTS_QTY = 7;
+    private static final float CAMERA_ZOOM = 0.3f;
     private final SpriteBatch mBatch;
     private final Stage mStage;
+
     //SpriteBatch is used for effective drawing of multiple sprites
     private final World mWorld;
     private final Box2DDebugRenderer mB2dr;
@@ -64,13 +66,13 @@ public class PlayScreen implements Screen
     public double mScore = 55;
     public double milestone = 50;
     public int tauntIndex = 0;
-
+    public int toInt = 0;
     private int mDriveDirection = DRIVE_DIRECTION_NONE;
     private int mTurnDirection = TURN_DIRECTION_NONE;
     private String mStringScore;
     private String mTaunt = "Not yet";
     private BitmapFont font;
-
+    private BitmapFont fontTaunt;
 
     private Controller mController;
 
@@ -84,12 +86,19 @@ public class PlayScreen implements Screen
         mViewport = new FitViewport(640 / PPM, 480 / PPM, mCamera);
         mMapLoader = new MapLoader(mWorld);
         mPlayer = mMapLoader.placePlayer();
+
+        mPlayer.setLinearDamping(0.5f);
+        //Using to control inertia
+
         mController = null;
 
         font = new BitmapFont();
+        fontTaunt = new BitmapFont();
 
+        fontTaunt.setColor(0.5f, 0.4f, 0, 1);
         font.setColor(0.5f, 0.4f, 0, 1);
-
+        fontTaunt.getData().setScale(FONT_SCALE - 0.5f);
+        font.getData().setScale(FONT_SCALE);
         try {
             mController = Controllers.getControllers().get(0);
         } catch (IndexOutOfBoundsException ex) {
@@ -99,6 +108,7 @@ public class PlayScreen implements Screen
         }
 
         mStage = new Stage(mViewport, mBatch);
+
     }
 
     @Override
@@ -120,15 +130,12 @@ public class PlayScreen implements Screen
         processDamage();
 
         update(delta);
-        handleDrift();
 
 
         mBatch.begin();
 
-        font.setColor(0.5f, 0.4f, 0, 1);
-
-        font.draw(mBatch, "Score: " + mStringScore, 640 / PPM, 480 / PPM);
-        font.draw(mBatch, mTaunt, 300 / PPM, -10);
+        font.draw(mBatch, "Score: " + mStringScore, 300 / PPM, 10 / PPM);
+        fontTaunt.draw(mBatch, mTaunt, 300 / PPM, -10);
 
         mBatch.end();
 
@@ -144,7 +151,9 @@ public class PlayScreen implements Screen
         if (numContacts > 0) {
 
             double randomHit = MIN_HIT + (Math.random() * (MAX_HIT - MIN_HIT));
-            mStringScore = String.valueOf(mScore -= randomHit);
+            mScore -= randomHit;
+            toInt = (int) mScore;
+            mStringScore = String.valueOf(toInt);
             Gdx.app.log("SCOOOORE", mStringScore);
         }
 
@@ -152,7 +161,10 @@ public class PlayScreen implements Screen
             List<String> taunts = createListOfTaunts();
 
             mTaunt = taunts.get(tauntIndex);
-            tauntIndex++;
+
+            if (tauntIndex <= TAUNTS_QTY) {
+                tauntIndex++;
+            }
             milestone += 50;
         }
 
@@ -209,12 +221,6 @@ public class PlayScreen implements Screen
         });
     }
 
-    private void handleDrift()
-    {
-        Vector2 forwardSpeed = getForwardVelocity();
-        Vector2 lateralSpeed = getLateralVelocity();
-        mPlayer.setLinearVelocity(forwardSpeed.x + lateralSpeed.x + DRIFT, forwardSpeed.y + lateralSpeed.y + DRIFT);
-    }
 
     private void processInput()
     {
@@ -239,28 +245,6 @@ public class PlayScreen implements Screen
         }
     }
 
-    private Vector2 getForwardVelocity()
-    {
-        //пригодится для актуализации вектора скорости на поворотах
-
-        Vector2 currentNormal = mPlayer.getWorldVector(new Vector2(0, 1));
-        float dotProduct = currentNormal.dot(mPlayer.getLinearVelocity());
-        //dotProduct -- скалярное произведение
-        return multiply(dotProduct, currentNormal);
-    }
-
-    private Vector2 getLateralVelocity()
-    {
-        Vector2 currentNormal = mPlayer.getWorldVector(new Vector2(1, 0));
-        float dotProduct = currentNormal.dot(mPlayer.getLinearVelocity());
-        return multiply(dotProduct, currentNormal);
-    }
-
-    private Vector2 multiply(float a, Vector2 v)
-    {
-
-        return new Vector2(a * v.x, a * v.y);
-    }
 
     private void handleInputController()
     {
@@ -286,7 +270,7 @@ public class PlayScreen implements Screen
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
             mDriveDirection = DRIVE_DIRECTION_FORWARD;
         } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            mDriveDirection = DRIVE_DIRECTION_FORWARD;
+            mDriveDirection = DRIVE_DIRECTION_BACKWARD;
         } else {
             mDriveDirection = DRIVE_DIRECTION_NONE;
         }
@@ -302,13 +286,16 @@ public class PlayScreen implements Screen
         if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
         }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
+            mCamera.zoom -= CAMERA_ZOOM;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.E)) {
+            mCamera.zoom += CAMERA_ZOOM;
+        }
     }
 
     private void draw()
     {
-        mBatch.begin();
-        font.draw(mBatch, "Score: " + mStringScore, 3 / PPM, 100 / PPM);
-        mBatch.end();
 
         mBatch.setProjectionMatrix(mCamera.combined);
         //mCamera.combined -  matrix that describes where things from game world should be

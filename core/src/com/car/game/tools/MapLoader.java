@@ -9,7 +9,6 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
-
 import com.badlogic.gdx.utils.Disposable;
 
 import static com.car.game.Constants.MAP_NAME;
@@ -44,7 +43,8 @@ public class MapLoader implements Disposable
                     new Vector2(rectangle.getWidth() / 2, rectangle.getHeight() / 2),
                     BodyDef.BodyType.StaticBody,
                     mWorld,
-                    OBJECT_DENSITY);
+                    OBJECT_DENSITY,
+                    false);
         }
     }
 
@@ -54,7 +54,7 @@ public class MapLoader implements Disposable
         return ShapeFactory.createRectangle(
                 new Vector2(player.getX() + player.getWidth() / 2, player.getY() + player.getHeight() / 2),
                 new Vector2(player.getWidth() / 2, player.getHeight() / 2),
-                BodyDef.BodyType.DynamicBody, mWorld, PLAYER_DENSITY);
+                BodyDef.BodyType.DynamicBody, mWorld, PLAYER_DENSITY, false);
 
     }
 

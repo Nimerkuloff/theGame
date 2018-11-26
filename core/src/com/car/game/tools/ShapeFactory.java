@@ -19,7 +19,7 @@ public class ShapeFactory {
 
     public static Body createRectangle(final Vector2 position, final Vector2 size,
                                        final BodyDef.BodyType type, final World world,
-                                        float density)
+                                       float density, boolean sensor)
     {
         //define properties of a body
         final BodyDef bdef = new BodyDef();
@@ -33,6 +33,7 @@ public class ShapeFactory {
         final FixtureDef fdef = new FixtureDef();
         fdef.shape= shape;
         fdef.density=density;
+        fdef.isSensor = sensor;
         body.createFixture(fdef);
 
         shape.dispose();
