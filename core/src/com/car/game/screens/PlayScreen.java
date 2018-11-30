@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.badlogic.gdx.Gdx.app;
+import static com.car.game.Constants.DEFAULT_AXIS_SENS;
 import static com.car.game.Constants.DEFAULT_ZOOM;
 import static com.car.game.Constants.DRIFT;
 import static com.car.game.Constants.DRIVE_DIRECTION_BACKWARD;
@@ -64,7 +65,7 @@ public class PlayScreen implements Screen
     private double milestone = 50;
     private int tauntIndex = 0;
     private int toInt = 0;
-
+    private boolean useKeyboard = false;
 
     private String mStringScore;
     private String mTaunt = "Not yet";
@@ -82,7 +83,7 @@ public class PlayScreen implements Screen
         mCamera.zoom = DEFAULT_ZOOM;
         mViewport = new FitViewport(640 / PPM, 480 / PPM, mCamera);
         mMapLoader = new MapLoader(mWorld);
-        mPlayer = new Car(MAX_SPEED, DRIFT, 50, mMapLoader, Car.DRIVE_2WD, mWorld);
+        mPlayer = new Car(MAX_SPEED, DRIFT, 80, mMapLoader, Car.DRIVE_2WD, mWorld);
 
 
         mXboxController = null;
@@ -100,6 +101,7 @@ public class PlayScreen implements Screen
         try {
             mXboxController = Controllers.getControllers().get(0);
         } catch (IndexOutOfBoundsException ex) {
+            useKeyboard = true;
             app.error("ControllerErr", "Is controller plugged?");
         }
 
@@ -112,14 +114,18 @@ public class PlayScreen implements Screen
     {
 
     }
+
     @Override
     public void render(float delta)
     {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-
-        handleInput();
+        if (useKeyboard) {
+            handleInputKeyboard();
+        } else {
+            handleInputController();
+        }
         processDamage();
         update(delta);
 
@@ -163,23 +169,25 @@ public class PlayScreen implements Screen
 
 
     }
+
     private List<String> createListOfTaunts()
     {
         List<String> taunts = new ArrayList<String>();
         taunts.add("Driving, heh?");
         taunts.add("Try to stay POSITIVE");
-        taunts.add("\"Go  on,  prove me wrong. \nDestroy the fabric of the universe.\n See if I care. \" \n― Terry Pratchett)");
+        taunts.add("\"Go  on,  prove  me  wrong. \nDestroy  the  fabric  of  the  universe.\n See  if I care. \" \n― Terry  Pratchett");
         taunts.add("\"I  often  wonder,  in  a  catfight,\n  when  one  doesn't  want  to  fight,\n if  the other cat calls it a pussy.\"\n― Anthony Liccione");
-        taunts.add("\"Is that all you've got? \nA few tricks and quick feet? \n\" \n― T. A. Miles");
-        taunts.add("\"One day, in retrospect,\n the years of struggle will strike you as the most beautiful.\"\n ― Sigmund Freud");
-        taunts.add("\"What you stay focused on will grow.\" ―\n Roy T. Bennett");
-        taunts.add("NO, NO, NO stop!!! Game has no end.");
+        taunts.add("\"Is  that  all  you've  got ? \nA  few  tricks  and  quick  feet? \n\" \n― T. A. Miles");
+        taunts.add("\"One  day, in  retrospect,\n the  years  of  struggle   will  strike  you  as  the  most  beautiful.\"\n ― Sigmund Freud");
+        taunts.add("\"What  you  stay  focused  on  will grow.\" ―\n Roy T. Bennett");
+        taunts.add("NO, NO, NO stop !!! Game  has  no  end.");
         taunts.add("No, please!");
-        taunts.add("Seriously it's time to stop...");
+        taunts.add("Seriously  it's time to stop...");
         taunts.add("No....");
-        taunts.add("\"You can get a thousand no's from people,\n and only one \"yes\" from God.\" ―\n Tyler Perry");
+        taunts.add("\"You  can  get  a  thousand  no's  from  people,\n and  only  one \"yes\"  from  God.\" ―\n Tyler Perry");
         return taunts;
     }
+
     private void createCollisionListener()
     {
         mWorld.setContactListener(new ContactListener()
@@ -216,25 +224,31 @@ public class PlayScreen implements Screen
 
 
     //TODO fix controller
-//    private void handleInputController()
-//    {
-//        if (mXboxController.getAxis(3) > DEFAULT_AXIS_SENS) {
-//            = DRIVE_DIRECTION_BACKWARD;
-//        } else if (mXboxController.getAxis(3) < -DEFAULT_AXIS_SENS) {
-//            mDriveDirection = DRIVE_DIRECTION_FORWARD;
-//        } else {
-//            mDriveDirection = DRIVE_DIRECTION_NONE;
-//        }
-//        if (mXboxController.getAxis(2) > DEFAULT_AXIS_SENS) {
-//            mTurnDirection = TURN_DIRECTION_RIGHT;
-//        } else if (mXboxController.getAxis(2) < -DEFAULT_AXIS_SENS) {
-//            mTurnDirection = TURN_DIRECTION_LEFT;
-//        } else {
-//            mTurnDirection = TURN_DIRECTION_NONE;
-//        }
-//
-//    }
-    private void handleInput()
+    private void handleInputController()
+    {
+        if (mXboxController.getButton(96)) {
+            mPlayer.setDriveDirection(DRIVE_DIRECTION_BACKWARD);
+        } else if (mXboxController.getButton(100)) {
+            mPlayer.setDriveDirection(DRIVE_DIRECTION_FORWARD);
+        } else {
+            mPlayer.setDriveDirection(DRIVE_DIRECTION_NONE);
+        }
+        if (mXboxController.getButton(97)) {
+            mPlayer.setTurnDirection(TURN_DIRECTION_RIGHT);
+        } else if (mXboxController.getButton(99)) {
+            mPlayer.setTurnDirection(TURN_DIRECTION_LEFT);
+        } else {
+            mPlayer.setTurnDirection(TURN_DIRECTION_NONE);
+        }
+        if (mXboxController.getAxis(3) > DEFAULT_AXIS_SENS) {
+            mCamera.zoom -= CAMERA_ZOOM;
+        } else if (mXboxController.getAxis(3) < -DEFAULT_AXIS_SENS) {
+            mCamera.zoom += CAMERA_ZOOM;
+        }
+
+    }
+
+    private void handleInputKeyboard()
     {
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
             mPlayer.setDriveDirection(DRIVE_DIRECTION_FORWARD);
@@ -275,6 +289,7 @@ public class PlayScreen implements Screen
         mB2dr.render(mWorld, mCamera.combined);
 
     }
+
     private void update(final float delta)
     {
         mPlayer.update(delta);
@@ -283,27 +298,32 @@ public class PlayScreen implements Screen
 
         mWorld.step(delta, 6, 2);//because it works better with 6,2
     }
+
     @Override
     public void resize(int width, int height)
     {
 
         mViewport.update(width, height);
     }
+
     @Override
     public void pause()
     {
 
     }
+
     @Override
     public void resume()
     {
 
     }
+
     @Override
     public void hide()
     {
 
     }
+
     @Override
     public void dispose()
     {
