@@ -10,41 +10,41 @@ import com.badlogic.gdx.physics.box2d.World;
 public class BodyHolder
 {
 
-    public static final float DRIFT_OFFSET = 1.0f;
-    protected static final int DIRECTION_NONE = 0;
     protected static final int DIRECTION_FORWARD = 1;
     protected static final int DIRECTION_BACKWARD = 2;
-
+    private static final float DRIFT_OFFSET = 1.0f;
+    private static final int DIRECTION_NONE = 0;
     private final Body mBody;
-
-    protected Vector2 mForwardSpeedVec;
-    protected Vector2 mLateralSpeedVec;
-
-    private float mDrift = 1;
+    private final int mId;
+    private Vector2 mForwardSpeedVec;
+    private float mDrift = 1.0f;
 
 
     public BodyHolder(final Body mBody)
     {
 
         this.mBody = mBody;
+        mId = -1;
     }
 
     public BodyHolder(final Vector2 position, final Vector2 size,
                       final BodyDef.BodyType type, final World world,
-                      float density, boolean sensor)
+                      final float density, final boolean sensor,
+                      final int id)
     {
         mBody = ShapeFactory.createRectangle(position, size, type, world, density, sensor);
+        this.mId = id;
     }
 
-    //todo drift
+
     public void update(final float delta)
     {
         if (mDrift < 1) {
 
             mForwardSpeedVec = getForwardVelocity();
-            mLateralSpeedVec = getLateralVelocity();
+            Vector2 mLateralSpeedVec = getLateralVelocity();
 
-            if (mLateralSpeedVec.len() < DRIFT_OFFSET) {
+            if (mLateralSpeedVec.len() < DRIFT_OFFSET && mId > 1) { //stop front wheels to drift after the turn
                 killDrift();
             } else {
                 handleDrift();
@@ -64,12 +64,14 @@ public class BodyHolder
         return mBody;
     }
 
-    //todo drift
+
     private void handleDrift()
     {
         final Vector2 forwardSpeed = getForwardVelocity();
         final Vector2 lateralSpeed = getLateralVelocity();
-        mBody.setLinearVelocity(forwardSpeed.x + lateralSpeed.x + mDrift, forwardSpeed.y + lateralSpeed.y + mDrift);
+        mBody.setLinearVelocity(
+                forwardSpeed.x + lateralSpeed.x * mDrift,
+                forwardSpeed.y + lateralSpeed.y * mDrift);
     }
 
 
@@ -90,16 +92,16 @@ public class BodyHolder
         return multiply(dotProduct, currentNormal);
     }
 
-    public void killDrift()
+    private void killDrift()
     {
 
         mBody.setLinearVelocity(mForwardSpeedVec);
     }
 
 
-    public int direction()
+    protected int direction()
     {
-        final float tolerance = 0.2f;
+        final float tolerance = 0.2f;//to stay still when not driving
         if (getLocalVelocity().y < -tolerance) {
             return DIRECTION_BACKWARD;
         } else if (getLocalVelocity().y > tolerance) {
@@ -108,6 +110,7 @@ public class BodyHolder
             return DIRECTION_NONE;
         }
     }
+
     private Vector2 getLocalVelocity()
     {
         return mBody.getLocalVector(mBody.getLinearVelocityFromLocalPoint(new Vector2(0, 0)));

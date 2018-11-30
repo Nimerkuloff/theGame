@@ -21,18 +21,14 @@ import static com.car.game.Constants.PPM;
 public class Menu implements Screen
 {
     private static final float DEFAULT_MENU_ZOOM = 24f;
-    protected Stage mStage;
-    private SpriteBatch mBatch;
+    private Stage mStage;
     private Viewport mViewport;
     private OrthographicCamera mCamera;
 
 
-    private TextButton.TextButtonStyle textButtonStyle;
-
-
     public Menu()
     {
-        mBatch = new SpriteBatch();
+        SpriteBatch mBatch = new SpriteBatch();
 
 
         mCamera = new OrthographicCamera();
@@ -60,11 +56,12 @@ public class Menu implements Screen
         mainTable.top();
 
 
-        textButtonStyle = new TextButton.TextButtonStyle();
+        TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.font = new BitmapFont();
 
         TextButton playButton = new TextButton("Play", textButtonStyle);
         TextButton anotherMapButton = new TextButton("Another map", textButtonStyle);
+        TextButton yetAnotherMapButton = new TextButton("Yet Another map", textButtonStyle);
         TextButton exitButton = new TextButton("Exit", textButtonStyle);
 
 
@@ -86,6 +83,15 @@ public class Menu implements Screen
                 ((Game) Gdx.app.getApplicationListener()).setScreen(new PlayScreen());
             }
         });
+        yetAnotherMapButton.addListener(new ClickListener()
+        {
+            @Override
+            public void clicked(InputEvent event, float x, float y)
+            {
+                MAP_NAME = "yet_another_map.tmx";
+                ((Game) Gdx.app.getApplicationListener()).setScreen(new PlayScreen());
+            }
+        });
         exitButton.addListener(new ClickListener()
         {
             @Override
@@ -99,6 +105,8 @@ public class Menu implements Screen
         mainTable.add(playButton);
         mainTable.row();
         mainTable.add(anotherMapButton);
+        mainTable.row();
+        mainTable.add(yetAnotherMapButton);
         mainTable.row();
         mainTable.add(exitButton);
 

@@ -20,7 +20,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.car.game.Car;
+import com.car.game.entities.Car;
 import com.car.game.tools.MapLoader;
 
 import java.util.ArrayList;
@@ -28,11 +28,13 @@ import java.util.List;
 
 import static com.badlogic.gdx.Gdx.app;
 import static com.car.game.Constants.DEFAULT_ZOOM;
+import static com.car.game.Constants.DRIFT;
 import static com.car.game.Constants.DRIVE_DIRECTION_BACKWARD;
 import static com.car.game.Constants.DRIVE_DIRECTION_FORWARD;
 import static com.car.game.Constants.DRIVE_DIRECTION_NONE;
 import static com.car.game.Constants.GRAVITY;
 import static com.car.game.Constants.MAX_HIT;
+import static com.car.game.Constants.MAX_SPEED;
 import static com.car.game.Constants.MIN_HIT;
 import static com.car.game.Constants.PPM;
 import static com.car.game.Constants.TURN_DIRECTION_LEFT;
@@ -63,6 +65,7 @@ public class PlayScreen implements Screen
     private int tauntIndex = 0;
     private int toInt = 0;
 
+
     private String mStringScore;
     private String mTaunt = "Not yet";
     private BitmapFont mFont;
@@ -70,7 +73,7 @@ public class PlayScreen implements Screen
 
     private Controller mXboxController;
 
-    public PlayScreen()
+    PlayScreen()
     {
         mBatch = new SpriteBatch();
         mWorld = new World(GRAVITY, true);//sleep is used to prevent redundant calculations
@@ -79,7 +82,7 @@ public class PlayScreen implements Screen
         mCamera.zoom = DEFAULT_ZOOM;
         mViewport = new FitViewport(640 / PPM, 480 / PPM, mCamera);
         mMapLoader = new MapLoader(mWorld);
-        mPlayer = new Car(mMapLoader.placePlayer());
+        mPlayer = new Car(MAX_SPEED, DRIFT, 50, mMapLoader, Car.DRIVE_2WD, mWorld);
 
 
         mXboxController = null;
@@ -135,7 +138,6 @@ public class PlayScreen implements Screen
     private void processDamage()
     {
         int numContacts = mWorld.getContactCount();
-
         if (numContacts > 0) {
 
             double randomHit = MIN_HIT + (Math.random() * (MAX_HIT - MIN_HIT));
@@ -149,12 +151,14 @@ public class PlayScreen implements Screen
             //todo показать использование коллекций
             List<String> taunts = createListOfTaunts();
 
+
             mTaunt = taunts.get(tauntIndex);
 
             if (tauntIndex < taunts.size() - 1) {
                 tauntIndex++;
             }
             milestone += 50;
+
         }
 
 
@@ -174,7 +178,6 @@ public class PlayScreen implements Screen
         taunts.add("Seriously it's time to stop...");
         taunts.add("No....");
         taunts.add("\"You can get a thousand no's from people,\n and only one \"yes\" from God.\" ―\n Tyler Perry");
-
         return taunts;
     }
     private void createCollisionListener()
