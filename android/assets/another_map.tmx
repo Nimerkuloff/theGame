@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="100" height="54" tilewidth="128" tileheight="128" infinite="0" backgroundcolor="#000064" nextlayerid="3" nextobjectid="168">
+<map version="1.2" tiledversion="1.2.0" orientation="orthogonal" renderorder="left-down" width="100" height="54" tilewidth="128" tileheight="128" infinite="0" backgroundcolor="#000064" nextlayerid="3" nextobjectid="170">
  <objectgroup id="1" name="wall">
   <object id="40" x="128" y="122" width="5240" height="134"/>
   <object id="142" x="5248" y="120" width="128" height="776"/>
@@ -9,8 +9,10 @@
   <object id="147" x="1152" y="1152" width="128" height="3328"/>
   <object id="153" x="5248" y="888" width="128" height="1664"/>
   <object id="163" x="5248" y="2560" width="128" height="2944"/>
-  <object id="164" x="256" y="5376" width="5120" height="128"/>
+  <object id="164" x="256" y="5344" width="4960" height="160"/>
   <object id="165" x="1152" y="4352" width="3200" height="128"/>
+  <object id="168" x="1408" y="4816" width="1328" height="496"/>
+  <object id="169" x="3200" y="4512" width="1168" height="496"/>
  </objectgroup>
  <objectgroup id="2" name="player">
   <object id="166" x="640" y="1920" width="128" height="256" visible="0">

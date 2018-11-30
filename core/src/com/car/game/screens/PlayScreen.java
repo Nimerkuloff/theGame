@@ -7,6 +7,7 @@ import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
@@ -43,7 +44,6 @@ public class PlayScreen implements Screen
 {
 
     private static final float FONT_SCALE = 0.9f;
-    private static final int TAUNTS_QTY = 7;
     private static final float CAMERA_ZOOM = 0.3f;
     private final SpriteBatch mBatch;
     private final Stage mStage;
@@ -88,8 +88,11 @@ public class PlayScreen implements Screen
         mFontTaunt = new BitmapFont();
 
         mFontTaunt.setColor(0.5f, 0.4f, 0, 1);
-        mFont.setColor(0.5f, 0.4f, 0, 1);
         mFontTaunt.getData().setScale(FONT_SCALE - 0.5f);
+        mFontTaunt.getRegion()
+                .getTexture()
+                .setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        mFont.setColor(0.5f, 0.4f, 0, 1);
         mFont.getData().setScale(FONT_SCALE);
         try {
             mXboxController = Controllers.getControllers().get(0);
@@ -143,11 +146,12 @@ public class PlayScreen implements Screen
         }
 
         if (-mScore > milestone) {
+            //todo показать использование коллекций
             List<String> taunts = createListOfTaunts();
 
             mTaunt = taunts.get(tauntIndex);
 
-            if (tauntIndex <= TAUNTS_QTY) {
+            if (tauntIndex < taunts.size() - 1) {
                 tauntIndex++;
             }
             milestone += 50;
@@ -160,12 +164,15 @@ public class PlayScreen implements Screen
         List<String> taunts = new ArrayList<String>();
         taunts.add("Driving, heh?");
         taunts.add("Try to stay POSITIVE");
-        taunts.add("\"Go on, prove me wrong. \nDestroy the fabric of the universe.\n See if I care. \" \n― Terry Pratchett)");
-        taunts.add("\" I often wonder, in a catfight,\n when one doesn't want to fight,\n if the other cat calls it a pussy.\"\n― Anthony Liccione");
-        taunts.add("\"Is that all you've got? \nA few tricks and quick feet? \nThat's no way to enforce your bold tongue!\" \n― T. A. Miles");
+        taunts.add("\"Go  on,  prove me wrong. \nDestroy the fabric of the universe.\n See if I care. \" \n― Terry Pratchett)");
+        taunts.add("\"I  often  wonder,  in  a  catfight,\n  when  one  doesn't  want  to  fight,\n if  the other cat calls it a pussy.\"\n― Anthony Liccione");
+        taunts.add("\"Is that all you've got? \nA few tricks and quick feet? \n\" \n― T. A. Miles");
         taunts.add("\"One day, in retrospect,\n the years of struggle will strike you as the most beautiful.\"\n ― Sigmund Freud");
         taunts.add("\"What you stay focused on will grow.\" ―\n Roy T. Bennett");
         taunts.add("NO, NO, NO stop!!! Game has no end.");
+        taunts.add("No, please!");
+        taunts.add("Seriously it's time to stop...");
+        taunts.add("No....");
         taunts.add("\"You can get a thousand no's from people,\n and only one \"yes\" from God.\" ―\n Tyler Perry");
 
         return taunts;
