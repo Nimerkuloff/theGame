@@ -51,27 +51,23 @@ public class Menu implements Screen
     @Override
     public void show()
     {
-        //Stage should controll input:
-        Gdx.input.setInputProcessor(mStage);
 
-        //Create Table
-        Table mainTable = new Table();
-        //Set table to fill stage
+        Gdx.input.setInputProcessor(mStage);//Stage should control input:
+
+
+        Table mainTable = new Table();//Set table to fill stage
         mainTable.setFillParent(true);
-        //Set alignment of contents in the table.
         mainTable.top();
 
 
         textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.font = new BitmapFont();
 
-
-        //Create buttons
         TextButton playButton = new TextButton("Play", textButtonStyle);
         TextButton anotherMapButton = new TextButton("Another map", textButtonStyle);
         TextButton exitButton = new TextButton("Exit", textButtonStyle);
 
-        //Add listeners to buttons
+
         playButton.addListener(new ClickListener()
         {
             @Override

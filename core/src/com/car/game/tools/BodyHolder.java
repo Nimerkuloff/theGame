@@ -1,11 +1,10 @@
-package com.car.game;
+package com.car.game.tools;
 
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.World;
-import com.car.game.tools.ShapeFactory;
 
 
 public class BodyHolder
@@ -15,13 +14,18 @@ public class BodyHolder
     protected static final int DIRECTION_NONE = 0;
     protected static final int DIRECTION_FORWARD = 1;
     protected static final int DIRECTION_BACKWARD = 2;
-    private final Body mBody;
-    protected Vector2 mForwardSpeed;
-    protected Vector2 mLateralSpeed;
-    private float mDrift = 0.99f;
 
-    public BodyHolder(Body mBody)
+    private final Body mBody;
+
+    protected Vector2 mForwardSpeedVec;
+    protected Vector2 mLateralSpeedVec;
+
+    private float mDrift = 1;
+
+
+    public BodyHolder(final Body mBody)
     {
+
         this.mBody = mBody;
     }
 
@@ -32,27 +36,42 @@ public class BodyHolder
         mBody = ShapeFactory.createRectangle(position, size, type, world, density, sensor);
     }
 
-    public void setDrift(float drift)
+    //todo drift
+    public void update(final float delta)
     {
+        if (mDrift < 1) {
+
+            mForwardSpeedVec = getForwardVelocity();
+            mLateralSpeedVec = getLateralVelocity();
+
+            if (mLateralSpeedVec.len() < DRIFT_OFFSET) {
+                killDrift();
+            } else {
+                handleDrift();
+            }
+        }
+    }
+
+    public void setDrift(final float drift)
+    {
+
         this.mDrift = drift;
     }
 
     public Body getBody()
     {
+
         return mBody;
     }
 
-    protected void update(final float delta)
-    {
-
-    }
-
+    //todo drift
     private void handleDrift()
     {
-        Vector2 forwardSpeed = getForwardVelocity();
-        Vector2 lateralSpeed = getLateralVelocity();
+        final Vector2 forwardSpeed = getForwardVelocity();
+        final Vector2 lateralSpeed = getLateralVelocity();
         mBody.setLinearVelocity(forwardSpeed.x + lateralSpeed.x + mDrift, forwardSpeed.y + lateralSpeed.y + mDrift);
     }
+
 
     private Vector2 getForwardVelocity()
     {
@@ -66,10 +85,17 @@ public class BodyHolder
 
     private Vector2 getLateralVelocity()
     {
-        Vector2 currentNormal = mBody.getWorldVector(new Vector2(1, 0));
-        float dotProduct = currentNormal.dot(mBody.getLinearVelocity());
+        final Vector2 currentNormal = mBody.getWorldVector(new Vector2(1, 0));
+        final float dotProduct = currentNormal.dot(mBody.getLinearVelocity());
         return multiply(dotProduct, currentNormal);
     }
+
+    public void killDrift()
+    {
+
+        mBody.setLinearVelocity(mForwardSpeedVec);
+    }
+
 
     public int direction()
     {
@@ -82,12 +108,10 @@ public class BodyHolder
             return DIRECTION_NONE;
         }
     }
-
     private Vector2 getLocalVelocity()
     {
         return mBody.getLocalVector(mBody.getLinearVelocityFromLocalPoint(new Vector2(0, 0)));
     }
-
 
     private Vector2 multiply(float a, Vector2 v)
     {

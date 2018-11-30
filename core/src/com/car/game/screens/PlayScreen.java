@@ -9,8 +9,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
@@ -21,34 +19,31 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.car.game.Car;
 import com.car.game.tools.MapLoader;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.badlogic.gdx.Gdx.app;
-import static com.car.game.Constants.DEFAULT_AXIS_SENS;
 import static com.car.game.Constants.DEFAULT_ZOOM;
 import static com.car.game.Constants.DRIVE_DIRECTION_BACKWARD;
 import static com.car.game.Constants.DRIVE_DIRECTION_FORWARD;
 import static com.car.game.Constants.DRIVE_DIRECTION_NONE;
-import static com.car.game.Constants.DRIVE_SPEED;
 import static com.car.game.Constants.GRAVITY;
 import static com.car.game.Constants.MAX_HIT;
-import static com.car.game.Constants.MAX_SPEED;
 import static com.car.game.Constants.MIN_HIT;
 import static com.car.game.Constants.PPM;
 import static com.car.game.Constants.TURN_DIRECTION_LEFT;
 import static com.car.game.Constants.TURN_DIRECTION_NONE;
 import static com.car.game.Constants.TURN_DIRECTION_RIGHT;
-import static com.car.game.Constants.TURN_SPEED;
 
 
 public class PlayScreen implements Screen
 {
 
-    public static final float FONT_SCALE = 0.9f;
-    public static final int TAUNTS_QTY = 7;
+    private static final float FONT_SCALE = 0.9f;
+    private static final int TAUNTS_QTY = 7;
     private static final float CAMERA_ZOOM = 0.3f;
     private final SpriteBatch mBatch;
     private final Stage mStage;
@@ -60,21 +55,20 @@ public class PlayScreen implements Screen
     //Orthographic - size of the object does not change according to the distance to the camera
     private final Viewport mViewport;
     //Viewport is where camera is placed
-    private final Body mPlayer;
+    private final Car mPlayer;
     private final MapLoader mMapLoader;
 
-    public double mScore = 55;
-    public double milestone = 50;
-    public int tauntIndex = 0;
-    public int toInt = 0;
-    private int mDriveDirection = DRIVE_DIRECTION_NONE;
-    private int mTurnDirection = TURN_DIRECTION_NONE;
+    private double mScore = 55;
+    private double milestone = 50;
+    private int tauntIndex = 0;
+    private int toInt = 0;
+
     private String mStringScore;
     private String mTaunt = "Not yet";
-    private BitmapFont font;
-    private BitmapFont fontTaunt;
+    private BitmapFont mFont;
+    private BitmapFont mFontTaunt;
 
-    private Controller mController;
+    private Controller mXboxController;
 
     public PlayScreen()
     {
@@ -85,26 +79,22 @@ public class PlayScreen implements Screen
         mCamera.zoom = DEFAULT_ZOOM;
         mViewport = new FitViewport(640 / PPM, 480 / PPM, mCamera);
         mMapLoader = new MapLoader(mWorld);
-        mPlayer = mMapLoader.placePlayer();
+        mPlayer = new Car(mMapLoader.placePlayer());
 
-        mPlayer.setLinearDamping(0.5f);
-        //Using to control inertia
 
-        mController = null;
+        mXboxController = null;
 
-        font = new BitmapFont();
-        fontTaunt = new BitmapFont();
+        mFont = new BitmapFont();
+        mFontTaunt = new BitmapFont();
 
-        fontTaunt.setColor(0.5f, 0.4f, 0, 1);
-        font.setColor(0.5f, 0.4f, 0, 1);
-        fontTaunt.getData().setScale(FONT_SCALE - 0.5f);
-        font.getData().setScale(FONT_SCALE);
+        mFontTaunt.setColor(0.5f, 0.4f, 0, 1);
+        mFont.setColor(0.5f, 0.4f, 0, 1);
+        mFontTaunt.getData().setScale(FONT_SCALE - 0.5f);
+        mFont.getData().setScale(FONT_SCALE);
         try {
-            mController = Controllers.getControllers().get(0);
+            mXboxController = Controllers.getControllers().get(0);
         } catch (IndexOutOfBoundsException ex) {
-
             app.error("ControllerErr", "Is controller plugged?");
-
         }
 
         mStage = new Stage(mViewport, mBatch);
@@ -116,26 +106,22 @@ public class PlayScreen implements Screen
     {
 
     }
-
     @Override
     public void render(float delta)
     {
-
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 
         handleInput();
-        processInput();
         processDamage();
-
         update(delta);
 
 
         mBatch.begin();
 
-        font.draw(mBatch, "Score: " + mStringScore, 300 / PPM, 10 / PPM);
-        fontTaunt.draw(mBatch, mTaunt, 300 / PPM, -10);
+        mFont.draw(mBatch, "Score: " + mStringScore, 300 / PPM, 10 / PPM);
+        mFontTaunt.draw(mBatch, mTaunt, 300 / PPM, -10);
 
         mBatch.end();
 
@@ -144,7 +130,6 @@ public class PlayScreen implements Screen
     }
 
     private void processDamage()
-
     {
         int numContacts = mWorld.getContactCount();
 
@@ -170,23 +155,21 @@ public class PlayScreen implements Screen
 
 
     }
-
     private List<String> createListOfTaunts()
     {
         List<String> taunts = new ArrayList<String>();
         taunts.add("Driving, heh?");
-        taunts.add("Try to stay positive");
-        taunts.add("\"Go on, prove me wrong. Destroy the fabric of the universe. See if I care. \" ― Terry Pratchett)");
-        taunts.add("\" I often wonder, in a catfight, when one doesn't want to fight, if the other cat calls it a pussy.\"― Anthony Liccione");
-        taunts.add("\"Is that all you've got? A few tricks and quick feet? That's no way to enforce your bold tongue!\" ― T. A. Miles, Six Celestial Swords");
-        taunts.add("\"One day, in retrospect, the years of struggle will strike you as the most beautiful.\" ― Sigmund Freud");
-        taunts.add("\"What you stay focused on will grow.\" ― Roy T. Bennett");
-        taunts.add("NO, NO, NO stop!!! There aren't any endings.");
-        taunts.add("\"You can get a thousand no's from people, and only one \"yes\" from God.\" ― Tyler Perry");
+        taunts.add("Try to stay POSITIVE");
+        taunts.add("\"Go on, prove me wrong. \nDestroy the fabric of the universe.\n See if I care. \" \n― Terry Pratchett)");
+        taunts.add("\" I often wonder, in a catfight,\n when one doesn't want to fight,\n if the other cat calls it a pussy.\"\n― Anthony Liccione");
+        taunts.add("\"Is that all you've got? \nA few tricks and quick feet? \nThat's no way to enforce your bold tongue!\" \n― T. A. Miles");
+        taunts.add("\"One day, in retrospect,\n the years of struggle will strike you as the most beautiful.\"\n ― Sigmund Freud");
+        taunts.add("\"What you stay focused on will grow.\" ―\n Roy T. Bennett");
+        taunts.add("NO, NO, NO stop!!! Game has no end.");
+        taunts.add("\"You can get a thousand no's from people,\n and only one \"yes\" from God.\" ―\n Tyler Perry");
 
         return taunts;
     }
-
     private void createCollisionListener()
     {
         mWorld.setContactListener(new ContactListener()
@@ -222,65 +205,41 @@ public class PlayScreen implements Screen
     }
 
 
-    private void processInput()
-    {
-        Vector2 baseVector = new Vector2();
-
-        if (mTurnDirection == TURN_DIRECTION_RIGHT) {
-            mPlayer.setAngularVelocity(-TURN_SPEED);
-        } else if (mTurnDirection == TURN_DIRECTION_LEFT) {
-            mPlayer.setAngularVelocity(TURN_SPEED);
-        } else if (mTurnDirection == TURN_DIRECTION_NONE && mPlayer.getAngularVelocity() != 0) {
-            mPlayer.setAngularVelocity(0.0f);
-        }
-
-        if (mDriveDirection == DRIVE_DIRECTION_FORWARD) {
-            baseVector.set(0, DRIVE_SPEED);
-        } else if (mDriveDirection == DRIVE_DIRECTION_BACKWARD) {
-            baseVector.set(0, -DRIVE_SPEED);
-        }
-
-        if (!baseVector.isZero() && mPlayer.getLinearVelocity().len() < MAX_SPEED) {
-            mPlayer.applyForceToCenter(mPlayer.getWorldVector(baseVector), true);
-        }
-    }
-
-
-    private void handleInputController()
-    {
-        if (mController.getAxis(3) > DEFAULT_AXIS_SENS) {
-            mDriveDirection = DRIVE_DIRECTION_BACKWARD;
-        } else if (mController.getAxis(3) < -DEFAULT_AXIS_SENS) {
-            mDriveDirection = DRIVE_DIRECTION_FORWARD;
-        } else {
-            mDriveDirection = DRIVE_DIRECTION_NONE;
-        }
-        if (mController.getAxis(2) > DEFAULT_AXIS_SENS) {
-            mTurnDirection = TURN_DIRECTION_RIGHT;
-        } else if (mController.getAxis(2) < -DEFAULT_AXIS_SENS) {
-            mTurnDirection = TURN_DIRECTION_LEFT;
-        } else {
-            mTurnDirection = TURN_DIRECTION_NONE;
-        }
-
-    }
-
+    //TODO fix controller
+//    private void handleInputController()
+//    {
+//        if (mXboxController.getAxis(3) > DEFAULT_AXIS_SENS) {
+//            = DRIVE_DIRECTION_BACKWARD;
+//        } else if (mXboxController.getAxis(3) < -DEFAULT_AXIS_SENS) {
+//            mDriveDirection = DRIVE_DIRECTION_FORWARD;
+//        } else {
+//            mDriveDirection = DRIVE_DIRECTION_NONE;
+//        }
+//        if (mXboxController.getAxis(2) > DEFAULT_AXIS_SENS) {
+//            mTurnDirection = TURN_DIRECTION_RIGHT;
+//        } else if (mXboxController.getAxis(2) < -DEFAULT_AXIS_SENS) {
+//            mTurnDirection = TURN_DIRECTION_LEFT;
+//        } else {
+//            mTurnDirection = TURN_DIRECTION_NONE;
+//        }
+//
+//    }
     private void handleInput()
     {
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            mDriveDirection = DRIVE_DIRECTION_FORWARD;
+            mPlayer.setDriveDirection(DRIVE_DIRECTION_FORWARD);
         } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            mDriveDirection = DRIVE_DIRECTION_BACKWARD;
+            mPlayer.setDriveDirection(DRIVE_DIRECTION_BACKWARD);
         } else {
-            mDriveDirection = DRIVE_DIRECTION_NONE;
+            mPlayer.setDriveDirection(DRIVE_DIRECTION_NONE);
         }
 
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            mTurnDirection = TURN_DIRECTION_LEFT;
+            mPlayer.setTurnDirection(TURN_DIRECTION_LEFT);
         } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            mTurnDirection = TURN_DIRECTION_RIGHT;
+            mPlayer.setTurnDirection(TURN_DIRECTION_RIGHT);
         } else {
-            mTurnDirection = TURN_DIRECTION_NONE;
+            mPlayer.setTurnDirection(TURN_DIRECTION_NONE);
         }
 
         if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
@@ -294,6 +253,7 @@ public class PlayScreen implements Screen
         }
     }
 
+
     private void draw()
     {
 
@@ -305,40 +265,35 @@ public class PlayScreen implements Screen
         mB2dr.render(mWorld, mCamera.combined);
 
     }
-
     private void update(final float delta)
     {
-        mCamera.position.set(mPlayer.getPosition(), 0);
+        mPlayer.update(delta);
+        mCamera.position.set(mPlayer.getBody().getPosition(), 0);
         mCamera.update();
 
         mWorld.step(delta, 6, 2);//because it works better with 6,2
     }
-
     @Override
     public void resize(int width, int height)
     {
 
         mViewport.update(width, height);
     }
-
     @Override
     public void pause()
     {
 
     }
-
     @Override
     public void resume()
     {
 
     }
-
     @Override
     public void hide()
     {
 
     }
-
     @Override
     public void dispose()
     {
